@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light-mode">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown 编辑器 & 预览</title>
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #24292e;
+            --editor-bg: #f6f8fa;
+            --border-color: #e1e4e8;
+            --code-bg: rgba(27,31,35,0.05);
+            --table-alt-bg: #f6f8fa;
+        }
+
+        .dark-mode {
+            --bg-color: #0d1117;
+            --text-color: #c9d1d9;
+            --editor-bg: #161b22;
+            --border-color: #30363d;
+            --code-bg: rgba(240,246,252,0.15);
+            --table-alt-bg: #161b22;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+        .container {
+            display: flex;
+            height: 100%;
+        }
+        .editor-container {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+        .editor, .preview {
+            flex: 1;
+            overflow-y: auto;
+        }
+        .editor {
+            background-color: var(--editor-bg);
+            padding: 20px;
+        }
+        .preview {
+            background-color: var(--bg-color);
+            border-left: 1px solid var(--border-color);
+            padding: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 100%;
+            border: none;
+            resize: none;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            outline: none;
+            background-color: transparent;
+            color: var(--text-color);
+        }
+        /* GitHub 风格的 Markdown 渲染 */
+        .markdown-body {
+            font-size: 16px;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+        .markdown-body h1, .markdown-body h2 {
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.3em;
+        }
+        .markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4, .markdown-body h5, .markdown-body h6 {
+            margin-top: 24px;
+            margin-bottom: 16px;
+            font-weight: 600;
+            line-height: 1.25;
+        }
+        .markdown-body p, .markdown-body blockquote, .markdown-body ul, .markdown-body ol, .markdown-body dl, .markdown-body table, .markdown-body pre {
+            margin-top: 0;
+            margin-bottom: 16px;
+        }
+        .markdown-body code {
+            padding: 0.2em 0.4em;
+            margin: 0;
+            font-size: 85%;
+            background-color: var(--code-bg);
+            border-radius: 3px;
+        }
+        .markdown-body pre {
+            padding: 16px;
+            overflow: auto;
+            font-size: 85%;
+            line-height: 1.45;
+            background-color: var(--editor-bg);
+            border-radius: 3px;
+        }
+        /* 改进的表格样式 */
+        .markdown-body table {
+            border-spacing: 0;
+            border-collapse: collapse;
+            display: block;
+            width: max-content;
+            max-width: 100%;
+            overflow: auto;
+        }
+        .markdown-body table th {
+            font-weight: 600;
+        }
+        .markdown-body table th,
+        .markdown-body table td {
+            padding: 6px 13px;
+            border: 1px solid var(--border-color);
+        }
+        .markdown-body table tr {
+            background-color: var(--bg-color);
+            border-top: 1px solid var(--border-color);
+        }
+        .markdown-body table tr:nth-child(2n) {
+            background-color: var(--table-alt-bg);
+        }
+
+        /* 主题切换开关样式 */
+        .theme-switch-wrapper {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: var(--editor-bg);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .theme-switch {
+            display: inline-block;
+            height: 34px;
+            position: relative;
+            width: 60px;
+        }
+        .theme-switch input {
+            display: none;
+        }
+        .slider {
+            background-color: #ccc;
+            bottom: 0;
+            cursor: pointer;
+            left: 0;
+            position: absolute;
+            right: 0;
+            top: 0;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            background-color: #fff;
+            bottom: 4px;
+            content: "";
+            height: 26px;
+            left: 4px;
+            position: absolute;
+            transition: .4s;
+            width: 26px;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        .slider-icon {
+            color: #ffffff;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            transition: .4s;
+            font-size: 14px;
+        }
+        .sun-icon {
+            left: 8px;
+        }
+        .moon-icon {
+            right: 8px;
+            opacity: 0;
+        }
+        input:checked + .slider .sun-icon {
+            opacity: 0;
+        }
+        input:checked + .slider .moon-icon {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="editor-container">
+            <div class="theme-switch-wrapper">
+                <label class="theme-switch" for="checkbox">
+                    <input type="checkbox" id="checkbox" />
+                    <div class="slider">
+                        <span class="slider-icon sun-icon">☀️</span>
+                        <span class="slider-icon moon-icon">🌙</span>
+                    </div>
+                </label>
+            </div>
+            <div class="editor">
+                <textarea id="editor" placeholder="在这里输入 Markdown 内容..."></textarea>
+            </div>
+        </div>
+        <div class="preview">
+            <div id="preview" class="markdown-body"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.2.12/marked.min.js"></script>
+    <script>
+        const editor = document.getElementById('editor');
+        const preview = document.getElementById('preview');
+        const themeToggle = document.getElementById('checkbox');
+
+        function updatePreview() {
+            preview.innerHTML = marked.parse(editor.value);
+        }
+
+        function initializeMarked() {
+            if (typeof marked !== 'undefined') {
+                editor.addEventListener('input', updatePreview);
+                updatePreview();
+            } else {
+                setTimeout(initializeMarked, 100);
+            }
+        }
+
+        // 主题切换功能
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark-mode');
+        }
+
+        themeToggle.addEventListener('change', toggleTheme);
+
+        // 检查用户的颜色方案偏好
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark-mode');
+            themeToggle.checked = true;
+        }
+
+        // 初始化一些示例内容，包括表格
+        editor.value = `# 欢迎使用 Markdown 编辑器
+
+这是一个简单的 Markdown 编辑器示例。
+
+## 功能
+
+- 实时预览
+- GitHub 风格渲染
+- 白天/黑暗模式切换（现在在左上角）
+
+试试输入一些 **粗体** 或者 *斜体* 文本吧！
+
+\`\`\`javascript
+console.log("Hello, Markdown!");
+\`\`\`
+
+### 表格示例
+
+| 标题 1 | 标题 2 | 标题 3 |
+|--------|--------|--------|
+| 单元格 1 | 单元格 2 | 单元格 3 |
+| 单元格 4 | 单元格 5 | 单元格 6 |
+
+祝您使用愉快！`;
+
+        initializeMarked();
+    </script>
+</body>
+</html>
