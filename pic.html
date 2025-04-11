@@ -164,48 +164,87 @@
         }
 
         function downloadImage(type) {
+            // 创建一个更高分辨率的 canvas (2倍大小)
+            const scale = 2;
             const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            const size = 300;
+            const size = 300 * scale;
             canvas.width = size;
             canvas.height = size;
+            const ctx = canvas.getContext('2d');
 
+            // 缩放所有绘制操作
+            ctx.scale(scale, scale);
+
+            // 绘制背景
             ctx.fillStyle = bgColorPicker.value;
-
             if (type === 'circle') {
                 ctx.beginPath();
-                ctx.arc(size/2, size/2, size/2, 0, Math.PI * 2);
+                ctx.arc(150, 150, 150, 0, Math.PI * 2);
                 ctx.fill();
             } else if (type === 'rounded') {
                 const radius = parseInt(radiusInput.value);
                 ctx.beginPath();
                 ctx.moveTo(radius, 0);
-                ctx.lineTo(size - radius, 0);
-                ctx.quadraticCurveTo(size, 0, size, radius);
-                ctx.lineTo(size, size - radius);
-                ctx.quadraticCurveTo(size, size, size - radius, size);
-                ctx.lineTo(radius, size);
-                ctx.quadraticCurveTo(0, size, 0, size - radius);
+                ctx.lineTo(300 - radius, 0);
+                ctx.quadraticCurveTo(300, 0, 300, radius);
+                ctx.lineTo(300, 300 - radius);
+                ctx.quadraticCurveTo(300, 300, 300 - radius, 300);
+                ctx.lineTo(radius, 300);
+                ctx.quadraticCurveTo(0, 300, 0, 300 - radius);
                 ctx.lineTo(0, radius);
                 ctx.quadraticCurveTo(0, 0, radius, 0);
                 ctx.fill();
             } else {
-                ctx.fillRect(0, 0, size, size);
+                ctx.fillRect(0, 0, 300, 300);
             }
 
+            // 绘制文本
             const text = nameInput.value || '示例';
             ctx.fillStyle = 'white';
             const fontSize = parseInt(nameText.style.fontSize);
-            ctx.font = `bold ${fontSize}px Arial`;
+            ctx.font = `bold ${fontSize}px Arial, "Microsoft YaHei", "微软雅黑"`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
 
-            const maxWidth = size * 0.95;
-            ctx.fillText(text, size/2, size/2, maxWidth);
+            // 文本分行处理
+            const maxWidth = 300 * 0.9; // 使用未缩放的宽度进行计算
+            const lines = [];
+            let currentLine = '';
+            let currentWidth = 0;
 
+            // 优化的文本分行算法
+            for (let char of text) {
+                const testLine = currentLine + char;
+                const metrics = ctx.measureText(testLine);
+                if (metrics.width > maxWidth) {
+                    lines.push(currentLine);
+                    currentLine = char;
+                } else {
+                    currentLine = testLine;
+                }
+            }
+            if (currentLine) {
+                lines.push(currentLine);
+            }
+
+            // 绘制多行文本
+            const lineHeight = fontSize * 1.2;
+            const totalHeight = lineHeight * lines.length;
+            const startY = (300 - totalHeight) / 2 + lineHeight / 2;
+
+            // 应用文本平滑
+            ctx.textRendering = 'optimizeLegibility';
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+
+            lines.forEach((line, index) => {
+                ctx.fillText(line, 150, startY + index * lineHeight, maxWidth);
+            });
+
+            // 创建下载链接
             const link = document.createElement('a');
             link.download = `${text}_${type}.png`;
-            link.href = canvas.toDataURL();
+            link.href = canvas.toDataURL('image/png', 1.0); // 使用最高质量
             link.click();
         }
 
