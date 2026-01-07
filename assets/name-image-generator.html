@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>名字图片生成器 - 大字版</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        #nameInput {
+            margin-bottom: 10px;
+            padding: 5px;
+            font-size: 16px;
+        }
+        #generateBtn, #downloadBtn {
+            margin: 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        #imageContainer {
+            width: 500px;
+            height: 500px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+            color: white;
+            overflow: hidden;
+            text-align: center;
+        }
+        #nameText {
+            padding: 20px;
+            line-height: 1.2;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <input type="text" id="nameInput" placeholder="输入名字">
+    <button id="generateBtn">生成图片</button>
+    <div id="imageContainer"><div id="nameText"></div></div>
+    <button id="downloadBtn" style="display: none;">下载图片</button>
+
+    <script>
+        const nameInput = document.getElementById('nameInput');
+        const generateBtn = document.getElementById('generateBtn');
+        const imageContainer = document.getElementById('imageContainer');
+        const nameText = document.getElementById('nameText');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        function generateRandomColor() {
+            return '#' + Math.floor(Math.random()*16777215).toString(16);
+        }
+
+        function adjustFontSize() {
+            const containerWidth = imageContainer.offsetWidth;
+            const containerHeight = imageContainer.offsetHeight;
+            let fontSize = 100;
+            nameText.style.fontSize = `${fontSize}px`;
+
+            while ((nameText.offsetWidth < containerWidth * 0.9 && nameText.offsetHeight < containerHeight * 0.9) && fontSize < 500) {
+                fontSize++;
+                nameText.style.fontSize = `${fontSize}px`;
+            }
+
+            while ((nameText.offsetWidth > containerWidth * 0.9 || nameText.offsetHeight > containerHeight * 0.9) && fontSize > 1) {
+                fontSize--;
+                nameText.style.fontSize = `${fontSize}px`;
+            }
+        }
+
+        generateBtn.addEventListener('click', () => {
+            const name = nameInput.value.trim();
+            if (name) {
+                imageContainer.style.backgroundColor = generateRandomColor();
+                nameText.textContent = name;
+                adjustFontSize();
+                downloadBtn.style.display = 'block';
+            }
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            html2canvas(imageContainer).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `${nameInput.value.trim()}.png`;
+                link.href = canvas.toDataURL();
+                link.click();
+            });
+        });
+    </script>
+</body>
+</html>
