@@ -1,0 +1,28 @@
+    .floating-ad {
+        position: fixed;
+        bottom: 300px;
+        right: 20px;
+        z-index: 9999;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: none;
+        /* 初始隐藏 */
+        width: 15vw;
+        /* 使用视窗宽度的15% */
+        max-width: 120px;
+        /* 最大宽度200px */
+        min-width: 90px;
+        /* 最小宽度100px */
+    }
+
+    .floating-ad img {
+        width: 100%;
+        /* 图片宽度100%适应父容器 */
+        height: auto;
+        /* 高度自动，保持比例 */
+        border-radius: 8px;
+    }
+
+    .floating-ad:hover {
+        transform: scale(1.05);
+    }
